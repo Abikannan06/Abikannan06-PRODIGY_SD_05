@@ -1,0 +1,57 @@
+import requests
+from bs4 import BeautifulSoup
+import csv
+
+def scrape_amazon_best_sellers(url):
+    
+    response = requests.get(url)
+    
+  
+    soup = BeautifulSoup(response.text, 'html.parser')
+    
+
+    product_containers = soup.find_all('div', class_='zg-item-immersion')
+    
+  
+    products = []
+  
+    for container in product_containers:
+      
+        name = container.find('div', class_='p13n-sc-truncated').text.strip()
+        
+      
+        price = container.find('span', class_='p13n-sc-price').text.strip()
+        
+      
+        rating = container.find('span', class_='a-icon-alt')
+        if rating:
+            rating = rating.text.strip()
+        else:
+            rating = 'Not available'
+        
+      
+        products.append({'Name': name, 'Price': price, 'Rating': rating})
+    
+    return products
+
+def save_to_csv(products, filename):
+  
+    fieldnames = ['Name', 'Price', 'Rating']
+    
+  
+    with open(filename, 'w', newline='', encoding='utf-8') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for product in products:
+            writer.writerow(product)
+    print(f"Product information saved to {filename}")
+
+def main():
+    url = 'https://www.amazon.com/Best-Sellers/zgbs'
+    filename = 'amazon_best_sellers.csv'
+    
+    products = scrape_amazon_best_sellers(url)
+    save_to_csv(products, filename)
+
+if __name__ == "__main__":
+    main()
